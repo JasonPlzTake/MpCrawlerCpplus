@@ -1,21 +1,30 @@
-// MpCrawlerCpplus.cpp : This file contains the 'main' function. Program execution begins and ends there.
+﻿// MpCrawlerCpplus.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-#define CURL_STATICLIB
+// #include "stdafx.h" 
+// #define CURL_STATICLIB
+
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+
 #include <iostream>
 #include <stdio.h>
-// #include <set>
-// #include <string>
-
-//#include <string.h>
+#include <sstream>
 #include <stdlib.h>
-//#include <string>
-//#include <curl/curl.h>
 #include <list>
 #include <unordered_set>
 
-using namespace std;
+#include<stdio.h>  
+#include<string>  
+#include<iostream>
 
-class RouteInfo {
+#include <winsock2.h>
+#include <windows.h>
+#pragma comment(lib, "ws2_32.lib")
+
+#define WSWENS MAKEWORD(2,0)  
+
+using namespace std;
+/*
+struct RouteInfo { ///////////////////////////// struct vs class ////////////////////////////////
 public:
     string routeName;
     string routeGrade;
@@ -65,6 +74,27 @@ public:
 //
 //    return readBuffer;
 //}
+namespace HtmlFunc{
+    static list<string> HtmlFindAllTags(string htmlText, string tagName, string keywords) {
+
+    }
+
+
+    static string GetHyperLinks(string htmlText, string tagNmae) {
+
+    }
+
+    static string GetRouteName(string routeHtmlText) {
+
+    }
+    static string GetRouteGrade(string routeHtmlText) {
+
+    }
+    static string GetRouteLocation(string routeHtmlText) {
+
+    }
+}
+
 
 static list<string> GenSearchUrlList(string locationCode) {
 
@@ -114,8 +144,80 @@ static list<string> GenSearchUrlList(string locationCode) {
     return urlList;
 }
 
-static void CrawlePerGrade(string url, list<RouteInfo> routeInfoList, unordered_set<string> linkSet, int index) {
+static void CrawlePerGrade(string url, list<RouteInfo> routeInfoList, unordered_set<string> routeLinkSet, int searchGrade) {
+    // Function: 
+    //          1) get each route page link from the 'url' page from inputs 
+    //             (In search url page, 'a' tag with class as "text-black route-row" is the route info page for each route)
+    //
+    //          2) collect route name, route grade, route location, ruote link and saved in routeInfoList by visiting each route link 
+    //
+    //          3) Error message:
+    //                          A. if location code is incorrect, throw an error message
+    //                          B. If 1000 routes link is found in the search page, throw an error message.
+    //                             (if search page has "All Locations", it means location code is not correct
+    //                             a more accurate check could be find tag name and keywords as below:
+    //                             "<span id="single-area-picker-name">All Locations</span>"
+    //
+    // Inputs:
+    //         url :          the url shall include list of route links from mountain project route finder engine
+    //         routeInfoList: it contains route info class defined in WebAppDataLib.Models
+    //         routeLinkSet:  it contains route links which has been visited from lower grading url
+    //         searchGrade:   used for error reporting to indicate which grade has more than 1000 routes
+    //
 
+    /// Get each route page
+    string htmlText;
+    list<string> routeLinkTagList = HtmlFunc::HtmlFindAllTags(htmlText, "a", "class=\"text-black route-row\"");
+
+
+    /// ERROR A:          
+    if (htmlText.find("All Locations") != string::npos)
+    {       
+        string errMessage = "Incorrect Location Code!";
+        throw std::logic_error(errMessage); // ******************************************************************************
+    }
+
+    /// ERROR B:    
+    if (routeLinkTagList.size() == 1000)
+    {
+        string errMessage = "Route Number at Grade V" + to_string(searchGrade) + "exceed 1000!";
+        throw std::logic_error(errMessage); //*************************************************
+    }
+
+    /// Crawling 
+    cout << "Collect " << routeLinkTagList.size() << " routes information..." << endl;
+
+    list<string> ::iterator routeLinkTag;
+
+    for (routeLinkTag = routeLinkTagList.begin(); routeLinkTag != routeLinkTagList.end(); routeLinkTag++)
+    {
+        string routeLink = HtmlFunc::GetHyperLinks(*routeLinkTag, "href=");
+
+        // skip visited routes
+        if (routeLinkSet.find(routeLink) != routeLinkSet.end())
+        {
+            continue;
+        }
+        else
+        {
+            string route = ""; //*******************************************************************************
+            // ERROR:
+            // below fault can be pre-detected by error reporting in 
+            if (route.find("The page you're looking for does not exist") != string::npos)
+            {
+                throw std::logic_error("Page Not Found!"); //********************** Do we wanna stop or continue? ******************
+            }
+
+            // Collect route information from each route page
+            RouteInfo routeInfo = RouteInfo(HtmlFunc::GetRouteName(route),
+                                            HtmlFunc::GetRouteGrade(route),
+                                            HtmlFunc::GetRouteLocation(route),
+                                            routeLink);
+            routeInfoList.push_back(routeInfo);
+            routeLinkSet.insert(routeLink);
+            // Console.WriteLine("processing route : " + routeName + " ...");
+        }
+    }
 }
 
 static list<RouteInfo> MpBoulderRouteCrawler(string locationCode) {
@@ -140,16 +242,165 @@ static list<RouteInfo> MpBoulderRouteCrawler(string locationCode) {
 
     return routeInfoList;
 }
+*/
 
-
-void main()
+int main()
 {
     cout << "Hello World!\n";
     // const char* url = "https://www.mountainproject.com/";
     // cout<< GetHtmlText(url) << endl;
-    list<string> res = GenSearchUrlList("11111");
+    //list<string> res = GenSearchUrlList("11111");
+    /*
+    sockaddr_in sin;
+    WSADATA wsadata;
+    //WSAStartup()的调用方和Windows Sockets DLL互相通知对方它们可以支持的最高版本,  
+    //并且互相确认对方的最高版本是可接受的. 在WSAStartup()函数的入口,  
+    //Windows Sockets DLL检查了应用程序所需的版本.如果版本高于DLL支持的最低版本,  
+    //则调用成功并且DLL在wHighVersion中返回它所支持的最高版本,  
+    //在 wVersion中返回它的高版本和wVersionRequested中的较小者.  
+    //然后Windows Sockets DLL就会假设应用程序将使用wVersion.  
+    if (WSAStartup(WSWENS, &wsadata) != 0)
+
+        cout << "startup failed" << endl;
+
+    SOCKET s = socket(PF_INET, SOCK_STREAM, 0);
+    // memset 是对一段内存空间全部设置为某个字符  
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(80);
+    //sin.sin_addr.S_un.S_addr=inet_addr("203.208.37.99");  
+    hostent* hptr = gethostbyname("www.google.cn");
+    // 将有参数的string内容copy到左边参数  
+    memcpy(&sin.sin_addr.S_un.S_addr, hptr->h_addr, hptr->h_length);
+    printf("IP address:%d.%d.%d.%d/n", sin.sin_addr.S_un.S_un_b.s_b1,
+        sin.sin_addr.S_un.S_un_b.s_b2,
+        sin.sin_addr.S_un.S_un_b.s_b3,
+        sin.sin_addr.S_un.S_un_b.s_b4);
+    // 将sockaddr_in transfer to sockaddr  
+    if (connect(s, (sockaddr*)&sin, sizeof(sin)))
+    {
+        cout << "connect failed" << endl;
+        return 0;
+    }
+    else
+    {
+        cout << "connect success" << endl;
+    }
+
+    char buffersend[] = "GET/HTTP1.1/nHOST:www.google.cn/nconnection:close/n/n";
+    send(s, buffersend, (int) strlen(buffersend), 0); ////////////////////////////////// casting 
+    string ss;
+    int len = recv(s,const_cast<char*>(ss.c_str()),2000,0);
+    char bufferecv[10240];
+
+    len = recv(s, bufferecv, 10240, 0);
+    printf("the length of page is %d/n", len);
+    if (len == -1)
+    {
+        cout << "receive failed" << endl;
+        return -1;
+    }
+    else
+        cout << "receive success" << endl;
+    for (int i = 0; i < len; i++)
+        printf("%c", bufferecv[i]);
+    WSACleanup();
+    closesocket(s);
+    return 0;
+
+    */
+    ///////////////////////////////////////////////////////////////
+    // Socket1.cpp : 定义控制台应用程序的入口点。
+
+//
 
 
+        sockaddr_in sin;
+
+        WSADATA wsadata;
+
+        if (WSAStartup(WSWENS, &wsadata) != 0)
+
+            cout << "startup failed" << endl;
+
+        SOCKET s = socket(PF_INET, SOCK_STREAM, 0);
+
+        memset(&sin, 0, sizeof(sin));
+
+        sin.sin_family = AF_INET;
+
+        sin.sin_port = htons(80);
+
+        // sin.sin_addr.S_un.S_addr=inet_addr("203.208.37.99");
+
+        hostent* hptr = gethostbyname("www.google.cn");
+
+        memcpy(&sin.sin_addr.S_un.S_addr, hptr->h_addr, hptr->h_length);
+
+        printf("IP address:%d.%d.%d.%d\n", sin.sin_addr.S_un.S_un_b.s_b1,
+
+            sin.sin_addr.S_un.S_un_b.s_b2,
+
+            sin.sin_addr.S_un.S_un_b.s_b3,
+
+            sin.sin_addr.S_un.S_un_b.s_b4);
+
+        // 将sockaddr_in transfer to sockaddr
+
+        if (connect(s, (sockaddr*)&sin, sizeof(sin)))
+        {
+            cout << "connect failed" << endl;
+            return 0;
+        }
+        else
+        {
+            cout << "connect success" << endl;
+        }
+
+        //char buffersend[] = "GET/HTTP1.1\nHOST:www.google.cn\nconnection:close\n\n";
+
+        //send(s, buffersend, strlen(buffersend), 0);
+
+        /*string ss;
+
+        int len = recv(s,const_cast(ss.c_str()),2000,0);*/
+
+
+        //char bufferecv[10240];
+
+        //int len = recv(s, bufferecv, 10240, 0);
+
+        //cout << bufferecv << endl;
+
+        // Do-while loop to send and receive data
+        char buf[4096];
+        char buffersend[] = "GET/HTTP1.1\nHOST:www.google.cn\nconnection:close\n\n";
+
+        do
+        {
+            // Prompt the user for some text
+
+            // Send the text
+            int sendResult = send(s, buffersend, strlen(buffersend) + 1, 0);
+            if (sendResult != SOCKET_ERROR)
+            {
+                // Wait for response
+                ZeroMemory(buf, 4096);
+                int bytesReceived = recv(s, buf, 4096, 0);
+                if (bytesReceived > 0)
+                {
+                    // Echo response to console
+                    cout << "SERVER> " << string(buf, 0, bytesReceived) << endl;
+                }
+            }
+
+        } while (strlen(buffersend) > 0);
+
+        // Gracefully close down everything
+        closesocket(s);
+        // WSACleanup();
+
+        //printf("the length of page is %d\n", len);
 }
 
 
