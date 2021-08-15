@@ -17,13 +17,14 @@
 #include<iostream>
 
 #include <winsock2.h>
+#include <stack>
 #include <windows.h>
 #pragma comment(lib, "ws2_32.lib")
 
 #define WSWENS MAKEWORD(2,0)  
 
 using namespace std;
-/*
+
 struct RouteInfo { ///////////////////////////// struct vs class ////////////////////////////////
 public:
     string routeName;
@@ -74,28 +75,169 @@ public:
 //
 //    return readBuffer;
 //}
-namespace HtmlFunc{
-    static list<string> HtmlFindAllTags(string htmlText, string tagName, string keywords) {
 
+
+
+
+namespace HtmlFunc {
+    // List<string> HtmlFindAllTags(string htmlText, string tagName)
+    // List<string> HtmlFindAllTags(string htmlText, string tagName, string className)
+    // string GetHyperLinks(string currStr, string linkName)
+
+
+       /// <summary>
+    ///           looking for : < tagName > ... </ tagName >
+    ///           Handle the condition that within a qualified tag there are more than one nested qualified tags
+    /// Todo:
+    ///            handle fault when stack is not empty in the end, or end find while stack is empty
+    /// </summary>
+    /// <param name="htmlText"></param>
+    /// <param name="tagName"></param>
+    /// <returns></returns>
+    static list<string> SearchByTagName(string htmlText, string tagName) {
+        list<string> validTagContent;
+        stack<int> nestedBeginTags;
+        string tagBegin = "<" + tagName;         // "< tagName" 
+        string tagEnd = "</" + tagName + ">";    // "</tagName>"
+
+        for (int i = 0; i < (htmlText.length() - tagBegin.length()); i++)
+        {
+            // skip if tagBegin is not found
+            if (!htmlText.substr(i, tagBegin.length()).compare(tagBegin) == 0)
+                continue;
+
+            for (int j = i; j < htmlText.length() - tagEnd.length(); j++)
+            {
+                // if tag begin is found, push the index of first character into stack
+                if (htmlText.substr(j, tagBegin.length()).compare(tagBegin) == 0)
+                {
+                    nestedBeginTags.push(j);
+                    j += tagBegin.length();
+                    continue;
+                }
+
+                // if end tag is found, pair with the most recent tag begin index
+                if (htmlText.substr(j, tagEnd.length()).compare(tagEnd) == 0)
+                {
+                    
+                    int startIndex;
+                    int sectionLen;
+                    startIndex = nestedBeginTags.top();
+                    nestedBeginTags.pop();
+                    sectionLen = j + tagEnd.length() - startIndex;
+                    validTagContent.push_back(htmlText.substr(startIndex, sectionLen));
+                    // exit if all tag ends are found
+                    if (nestedBeginTags.size() == 0)
+                    {
+                        i = j + tagEnd.length();
+                        break;
+                    }
+                }
+            }
+        }
+
+        return validTagContent;
     }
 
 
-    static string GetHyperLinks(string htmlText, string tagNmae) {
+    /// <summary>
+    ///         look for < tagName ... class = ""... >
+    ///         check the string in the first <> in case of nested tags
+    /// </summary>
+    /// <param name="tagContentList"></param>
+    /// <param name="className"></param>
+    /// <returns></returns>
+    static list<string> FilterByClassName(list<string> tagContentList, string className) {
 
+        list<string> filterResult;
+
+        list<string>::iterator strIter;
+        for (strIter = tagContentList.begin(); strIter != tagContentList.end(); strIter++)
+        {
+            string currStr = *strIter;
+            int searchLen = currStr.find('>') + 1;
+
+            if (currStr.substr(0, searchLen).find(className))
+            {
+                filterResult.push_back(currStr);
+            }
+        }
+
+        return filterResult;
     }
 
+
+    /// <summary>
+    ///         this function is to search any tag with tagName only
+    ///         find1 : <tagName> ... </tagName>
+    /// </summary>
+    /// <param name="htmlText"></param>
+    /// <param name="tagNmae"></param>
+    /// <returns></returns>
+    static list<string> HtmlFindAllTags(string htmlText, string tagName)
+    {
+        return HtmlFunc::SearchByTagName(htmlText, tagName);
+    }
+
+
+    /// <summary>
+    /// 
+    ///            this function is to search any tag with tagName. Also, it shall include typeName 
+    ///            find2 : <tagName class="..."> ... </tagName>, <tagName href="..."> ... </tagName>
+    /// Notes:
+    ///              type can be " any="any... "
+    /// </summary>
+    /// <param name="routeHtmlText"></param>
+    /// <returns></returns>
+    static list<string> HtmlFindAllTags(string htmlText, string tagName, string className) {
+
+        return HtmlFunc::FilterByClassName(HtmlFunc::SearchByTagName(htmlText, tagName), className);
+    }
+
+    /// <summary>
+    ///              Specify the first <> as the search range, in case of nested tag
+    ///              Return the first found url begins with linkName. Otherwise empty string
+    ///              For instance, if "href="http://" is found within the first <>, extract link and add it to the list
+    ///
+    /// Notes:
+    ///              type can be " any="any... "
+    /// 
+    /// </summary>
+    /// <param name="currStr"></param>
+    /// <param name="linkKeywords"></param>
+    /// <returns></returns>
+    static string GetHyperLinks(string currStr, string linkKeywords) {
+        string hyperLink = "";
+        int searchEnd = currStr.find('>');
+        string searchStr = currStr.substr(0, searchEnd + 1);
+
+        if (searchStr.find(linkKeywords) != string::npos)
+        {
+            int linkBeginAt = currStr.find("http");
+            int linkEndAt = currStr.substr(linkBeginAt, searchEnd - linkBeginAt).find('"');  // find " which ends the url
+            hyperLink = currStr.substr(linkBeginAt, linkEndAt);
+        }
+
+        return hyperLink;
+    }
+}
+
+
+
+
+    
     static string GetRouteName(string routeHtmlText) {
-
+    
     }
+    
     static string GetRouteGrade(string routeHtmlText) {
 
     }
     static string GetRouteLocation(string routeHtmlText) {
 
     }
-}
 
-
+/*
 static list<string> GenSearchUrlList(string locationCode) {
 
     list<string> gradeList = { "20000", // vB
