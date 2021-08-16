@@ -18,6 +18,7 @@
 
 #include <winsock2.h>
 #include <stack>
+#include <regex>
 #include <windows.h>
 #pragma comment(lib, "ws2_32.lib")
 
@@ -78,23 +79,30 @@ public:
 
 
 
-
 namespace HtmlFunc {
-    // List<string> HtmlFindAllTags(string htmlText, string tagName)
-    // List<string> HtmlFindAllTags(string htmlText, string tagName, string className)
-    // string GetHyperLinks(string currStr, string linkName)
 
 
-       /// <summary>
+    /// <summary>
+
+    /// </summary>
+    /// <param name="htmlText"></param>
+    /// <param name="tagName"></param>
+    /// <returns></returns>
+    
+    /// <summary>
     ///           looking for : < tagName > ... </ tagName >
     ///           Handle the condition that within a qualified tag there are more than one nested qualified tags
+    /// 
+    ///           if config == 1, find the first valid tag section, if config == 0, find all
+    ///           for nested tag section and config == 1, the last element in the list is the first tag
     /// Todo:
     ///            handle fault when stack is not empty in the end, or end find while stack is empty
     /// </summary>
     /// <param name="htmlText"></param>
     /// <param name="tagName"></param>
+    /// <param name="config"> 0, find all; 1 find the first one</param>
     /// <returns></returns>
-    static list<string> SearchByTagName(string htmlText, string tagName) {
+    static list<string> SearchByTagName(string htmlText, string tagName, boolean config) {
         list<string> validTagContent;
         stack<int> nestedBeginTags;
         string tagBegin = "<" + tagName;         // "< tagName" 
@@ -106,29 +114,31 @@ namespace HtmlFunc {
             if (!htmlText.substr(i, tagBegin.length()).compare(tagBegin) == 0)
                 continue;
 
-            for (int j = i; j < htmlText.length() - tagEnd.length(); j++)
-            {
+            for (int j = i; j < htmlText.length() - tagEnd.length(); j++){
                 // if tag begin is found, push the index of first character into stack
-                if (htmlText.substr(j, tagBegin.length()).compare(tagBegin) == 0)
-                {
+                if (htmlText.substr(j, tagBegin.length()).compare(tagBegin) == 0){
                     nestedBeginTags.push(j);
                     j += tagBegin.length();
                     continue;
                 }
 
                 // if end tag is found, pair with the most recent tag begin index
-                if (htmlText.substr(j, tagEnd.length()).compare(tagEnd) == 0)
-                {
-                    
-                    int startIndex;
-                    int sectionLen;
-                    startIndex = nestedBeginTags.top();
+                if (htmlText.substr(j, tagEnd.length()).compare(tagEnd) == 0) {
+                    int startIndex = nestedBeginTags.top();
+                    int sectionLen = j + tagEnd.length() - startIndex;
+
                     nestedBeginTags.pop();
-                    sectionLen = j + tagEnd.length() - startIndex;
+
                     validTagContent.push_back(htmlText.substr(startIndex, sectionLen));
+
                     // exit if all tag ends are found
-                    if (nestedBeginTags.size() == 0)
-                    {
+                    if (nestedBeginTags.size() == 0){
+                        // if config == 1, find the first qualified tag section,
+                        // which is the last one in the list
+                        if (config == true)
+                            return validTagContent;
+
+                        // else, keep search
                         i = j + tagEnd.length();
                         break;
                     }
@@ -152,13 +162,11 @@ namespace HtmlFunc {
         list<string> filterResult;
 
         list<string>::iterator strIter;
-        for (strIter = tagContentList.begin(); strIter != tagContentList.end(); strIter++)
-        {
+        for (strIter = tagContentList.begin(); strIter != tagContentList.end(); strIter++){
             string currStr = *strIter;
             int searchLen = currStr.find('>') + 1;
 
-            if (currStr.substr(0, searchLen).find(className))
-            {
+            if (currStr.substr(0, searchLen).find(className)){
                 filterResult.push_back(currStr);
             }
         }
@@ -168,15 +176,31 @@ namespace HtmlFunc {
 
 
     /// <summary>
-    ///         this function is to search any tag with tagName only
+    ///         this function is to search any tag with provided tagName 
     ///         find1 : <tagName> ... </tagName>
     /// </summary>
     /// <param name="htmlText"></param>
     /// <param name="tagNmae"></param>
     /// <returns></returns>
-    static list<string> HtmlFindAllTags(string htmlText, string tagName)
-    {
-        return HtmlFunc::SearchByTagName(htmlText, tagName);
+    static list<string> HtmlFindAllTags(string htmlText, string tagName){
+        return HtmlFunc::SearchByTagName(htmlText, tagName, false);
+    }
+
+    /// <summary>
+    ///         this function is to search first tag with tagName provided
+    ///         find1 : <tagName> ... </tagName>
+    /// 
+
+    /// </summary>
+    /// <param name="htmlText"></param>
+    /// <param name="tagName"></param>
+    /// <returns> 
+    ///         Get the last element from the returned string list. 
+    ///         If it is not a nested list, it shall only include one element
+    /// </returns>
+    static string HtmlFindFirstTag(string htmlText, string tagName) {
+       
+        return HtmlFunc::SearchByTagName(htmlText, tagName, true).back();
     }
 
 
@@ -189,10 +213,24 @@ namespace HtmlFunc {
     /// </summary>
     /// <param name="routeHtmlText"></param>
     /// <returns></returns>
-    static list<string> HtmlFindAllTags(string htmlText, string tagName, string className) {
+    static list<string> HtmlFindAllTags(string htmlText, string tagName, string className){
 
-        return HtmlFunc::FilterByClassName(HtmlFunc::SearchByTagName(htmlText, tagName), className);
+        return HtmlFunc::FilterByClassName(HtmlFunc::SearchByTagName(htmlText, tagName, false), className);
     }
+
+    
+    /// <summary>
+    ///            this function is to search the first tag with tagName. Also, it shall include typeName 
+    ///            find2 : <tagName class="..."> ... </tagName>, <tagName href="..."> ... </tagName>
+    /// Notes:
+    ///              type can be " any="any... "
+    /// </summary>
+    /// <param name="routeHtmlText"></param>
+    /// <returns></returns>
+    static string HtmlFindFirstTag(string htmlText, string tagName, string className) {
+        return HtmlFunc::FilterByClassName(HtmlFunc::SearchByTagName(htmlText, tagName, true), className).back();
+    }
+
 
     /// <summary>
     ///              Specify the first <> as the search range, in case of nested tag
@@ -223,19 +261,111 @@ namespace HtmlFunc {
 }
 
 
+namespace GetRouteInfo {
 
-
-    
+    /// <summary>
+    ///          target section is as below example:
+    ///          < title > Climb Horse Fly, Olympics & amp; Pacific Coast < / title >
+    ///          1) find the first title and split at first ','
+    ///          2) remove "<title> Climb"
+    /// </summary>
+    /// <param name="routeHtmlText"></param>
+    /// <returns></returns>
     static string GetRouteName(string routeHtmlText) {
-    
+        // get tag section which contains route name information
+        string nameSection = HtmlFunc::HtmlFindFirstTag(routeHtmlText, "title");
+        int beginIndex = 13; // "<title>Climb " begin since 13th char
+        int len = nameSection.find(",") - beginIndex + 1;
+        return nameSection.substr(beginIndex, len);
     }
-    
+
+    /// <summary>
+    ///Function:
+    ///target area is as below example:
+    //    < h2 class ="inline-block mr-2" >
+    //      < span class ='rateYDS' > V6
+    //          <a href="https://www.mountainproject.com/international-climbing-grades" class ="font-body" >
+    //              < span class ="small" > YDS
+    //              < / span>
+    //          < / a >
+    //      < / span >
+    //      < span class ='rateFont' > 7A
+    //          <a href="https://www.mountainproject.com/international-climbing-grades" class ="font-body" >
+    //              < span class ="small" > Font
+    //              < / span>
+    //          < / a >
+    //      < / span >
+    //    < / h2 >
+    /// </summary>
+    /// <param name="routeHtmlText"></param>
+    /// <returns></returns>
     static string GetRouteGrade(string routeHtmlText) {
-
+        list<string> gradeSection = HtmlFunc::HtmlFindAllTags(routeHtmlText, "h2", "inline-block mr-2");
+        string routeGradeRow = HtmlFunc::HtmlFindAllTags(routeHtmlText, "span", "class='rateYDS'").front();
+        int beginIndex = routeGradeRow.find("'rateYDS'>") + 10;
+        int len = routeGradeRow.find(" <a href=") - beginIndex;
+        return routeGradeRow.substr(beginIndex, len);
     }
+
+    /// <summary>
+    // Function:
+    //          search all<a> tag which shall include location link following below sequence
+    //          [parent location1 link, parent location2 link, ..., finest area location link, boulder link]
+    // Todo:
+    //          are there any location name originally with '-' ?
+    //
+    //    Target location area is as below example:
+    //
+    //    < div class ="mb-half small text-warm" >
+    //        < a href="https://www.mountainproject.com/route-guide" > All Locations< / a>
+    //        & gt;
+    //        < a href="https://www.mountainproject.com/area/105708966/washington" > Washington < / a >
+    //        &gt;
+    //        < a href="https://www.mountainproject.com/area/108471374/central-west-cascades-seattle" > Central - W Casca & hellip; < / a >
+    //        & gt;
+    //        < a href="https://www.mountainproject.com/area/108471672/skykomish-valley" > Skykomish Valley< / a>
+    //        & gt;
+    //        < a href="https://www.mountainproject.com/area/105805788/gold-bar-boulders" > Gold Bar Boulders< / a >
+    //        & gt;
+    //        < a href="https://www.mountainproject.com/area/105970461/zekes-trail-boulders" > Zeke &  # 039;s Trail Bo&hellip;</a>
+    //        &gt;
+    //        < a href="https://www.mountainproject.com/area/118994021/jaws-boulder" > Jaws Boulder< / a>
+    //    < / div > 
+    /// </summary>
+    /// <param name="routeHtmlText"></param>
+    /// <returns></returns>
+    
     static string GetRouteLocation(string routeHtmlText) {
+        stringstream locationStr;
+        string locationSection = HtmlFunc::HtmlFindAllTags(routeHtmlText, "div", "class=\"mb-half small text-warm\"").front();
+        list<string> aTagList = HtmlFunc::HtmlFindAllTags(locationSection, "a");
+        int index = 0;
 
+        list<string>::iterator aTag;
+        for(aTag = aTagList.begin(); aTag != aTagList.end(); aTag++)
+        {
+            index += 1;
+
+            if (index <= 1)
+            {
+                continue;
+            }
+
+            string locationUrl = HtmlFunc::GetHyperLinks(*aTag, "href=\"");
+
+            int beginIndex = locationUrl.find_last_of("/") + 1;
+            string rawLocation = locationUrl.substr(beginIndex, locationUrl.size() - beginIndex);
+            string refinedLocation = regex_replace(rawLocation, regex("\\-"), " "); // repalce '-' with space
+            locationStr << refinedLocation;
+
+            if (index < aTagList.size())
+                locationStr << "->"; // skip the last add "->"
+        }
+
+        return locationStr.str();
     }
+}
+
 
 /*
 static list<string> GenSearchUrlList(string locationCode) {
