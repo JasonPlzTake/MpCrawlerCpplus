@@ -550,7 +550,7 @@ int main()
 
             sin.sin_addr.S_un.S_un_b.s_b4);
 
-        // 将sockaddr_in transfer to sockaddr
+        // sockaddr_in transfer to sockaddr
 
         if (connect(s, (sockaddr*)&sin, sizeof(sin)))
         {
@@ -569,7 +569,6 @@ int main()
         /*string ss;
 
         int len = recv(s,const_cast(ss.c_str()),2000,0);*/
-
 
         //char bufferecv[10240];
 
@@ -601,7 +600,7 @@ int main()
 
         } while (strlen(buffersend) > 0);
 
-        // Gracefully close down everything
+        // close down everything
         closesocket(s);
         // WSACleanup();
 
