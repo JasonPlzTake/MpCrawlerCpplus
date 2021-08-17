@@ -4,6 +4,7 @@
 // #define CURL_STATICLIB
 
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <iostream>
 #include <stdio.h>
@@ -367,7 +368,7 @@ namespace GetRouteInfo {
 }
 
 
-/*
+
 static list<string> GenSearchUrlList(string locationCode) {
 
     list<string> gradeList = { "20000", // vB
@@ -481,9 +482,9 @@ static void CrawlePerGrade(string url, list<RouteInfo> routeInfoList, unordered_
             }
 
             // Collect route information from each route page
-            RouteInfo routeInfo = RouteInfo(HtmlFunc::GetRouteName(route),
-                                            HtmlFunc::GetRouteGrade(route),
-                                            HtmlFunc::GetRouteLocation(route),
+            RouteInfo routeInfo = RouteInfo(GetRouteInfo::GetRouteName(route),
+                                            GetRouteInfo::GetRouteGrade(route),
+                                            GetRouteInfo::GetRouteLocation(route),
                                             routeLink);
             routeInfoList.push_back(routeInfo);
             routeLinkSet.insert(routeLink);
@@ -514,53 +515,61 @@ static list<RouteInfo> MpBoulderRouteCrawler(string locationCode) {
 
     return routeInfoList;
 }
-*/
 
-int main()
-{
-    cout << "Hello World!\n";
 
-        sockaddr_in sin;
 
-        WSADATA wsadata;
+namespace Url {
+    //static string getHtmlText(string url){
+        // Init Winsock
+        //WSADATA wsadata;
+        //if (WSAStartup(WSWENS, &wsadata) != 0)
+        //    cout << "startup failed" << endl;
 
-        if (WSAStartup(WSWENS, &wsadata) != 0)
-
-            cout << "startup failed" << endl;
-
-        SOCKET s = socket(PF_INET, SOCK_STREAM, 0);
-
-        memset(&sin, 0, sizeof(sin));
-
-        sin.sin_family = AF_INET;
-
-        sin.sin_port = htons(80);
+        //// Create socket
+        //SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
+        //if (s < 0) {
+        //    ExitProcess(EXIT_FAILURE);
+        //}
 
         // sin.sin_addr.S_un.S_addr=inet_addr("203.208.37.99");
+        //hostent* hptr = gethostbyname("www.google.com");
+        // 
+        // 
+        // 
+        // 
+        // hostent* hptr = gethostbyname(url.c_str());
+        // hostent* hptr = gethostbyname("en.wikipedia.org");
 
-        hostent* hptr = gethostbyname("www.google.cn");
 
-        memcpy(&sin.sin_addr.S_un.S_addr, hptr->h_addr, hptr->h_length);
+        // Get host name
+        //hostent* hptr = gethostbyname("www.mountainproject.com");// https://en.wikipedia.org/wiki/Main_Page
+        //if (hptr == nullptr) {
+        //    ExitProcess(EXIT_FAILURE);
+        //}
 
-        printf("IP address:%d.%d.%d.%d\n", sin.sin_addr.S_un.S_un_b.s_b1,
+        // Defien server info
+        //sockaddr_in sin;
+        //memset(&sin, 0, sizeof(sin));
+        //sin.sin_port = htons(80);
+        //sin.sin_family = AF_INET;
 
-            sin.sin_addr.S_un.S_un_b.s_b2,
+        //memcpy(&sin.sin_addr.S_un.S_addr, hptr->h_addr, hptr->h_length);
 
-            sin.sin_addr.S_un.S_un_b.s_b3,
+        //printf("IP address:%d.%d.%d.%d\n",
+        //    sin.sin_addr.S_un.S_un_b.s_b1,
+        //    sin.sin_addr.S_un.S_un_b.s_b2,
+        //    sin.sin_addr.S_un.S_un_b.s_b3,
+        //    sin.sin_addr.S_un.S_un_b.s_b4);
 
-            sin.sin_addr.S_un.S_un_b.s_b4);
+        //// sockaddr_in transfer to sockaddr
 
-        // sockaddr_in transfer to sockaddr
-
-        if (connect(s, (sockaddr*)&sin, sizeof(sin)))
-        {
-            cout << "connect failed" << endl;
-            return 0;
-        }
-        else
-        {
-            cout << "connect success" << endl;
-        }
+        //if (connect(s, (sockaddr*)&sin, sizeof(sin))) {
+        //    cout << "connect failed" << endl;
+        //    ExitProcess(EXIT_FAILURE);
+        //}
+        //else {
+        //    cout << "connect success" << endl;
+        //}
 
         //char buffersend[] = "GET/HTTP1.1\nHOST:www.google.cn\nconnection:close\n\n";
 
@@ -577,34 +586,115 @@ int main()
         //cout << bufferecv << endl;
 
         // Do-while loop to send and receive data
-        char buf[4096];
-        char buffersend[] = "GET/HTTP1.1\nHOST:www.google.cn\nconnection:close\n\n";
+        //char buf[10240];
+        // char buffersend[] = "GET / HTTP/1.1\r\nHost:www.google.com\r\nConnection: close\r\n\r\n";
+        // 
+        //dynamic allocate size
+        //const string begin = "GET /route-guide HTTP/1.1\r\nHost:";
+        //const string end = "\r\nConnection: close\r\n\r\n";
+        //string command = begin + url + end;
+        //char buffersend[command.length()] = command.c_str();
+        // 
+        // 
+        //char buffersend[] =  "GET /route-guide HTTP/1.1\r\nHost:www.mountainproject.com\r\nConnection: close\r\n\r\n";
 
-        do
-        {
-            // Prompt the user for some text
 
-            // Send the text
-            int sendResult = send(s, buffersend, strlen(buffersend) + 1, 0);
-            if (sendResult != SOCKET_ERROR)
-            {
-                // Wait for response
-                ZeroMemory(buf, 4096);
-                int bytesReceived = recv(s, buf, 4096, 0);
-                if (bytesReceived > 0)
-                {
-                    // Echo response to console
-                    cout << "SERVER> " << string(buf, 0, bytesReceived) << endl;
-                }
-            }
+        //do
+        //{
+        //    // Prompt the user for some text
 
-        } while (strlen(buffersend) > 0);
+        //    // Send the text
+        //    int sendResult = send(s, buffersend, strlen(buffersend), 0);
+        //    if (sendResult != SOCKET_ERROR)
+        //    {
+        //        // Wait for response
+        //        ZeroMemory(buf, 10240);
+        //        int bytesReceived = recv(s, buf, 10240, 0);
+        //        if (bytesReceived > 0)
+        //        {
+        //            // Echo response to console
+        //            cout << "SERVER> " << string(buf, 0, bytesReceived) << endl;
+        //        }
+        //    }
+
+        //} while (strlen(buffersend) > 0);
 
         // close down everything
-        closesocket(s);
+        //closesocket(s);
         // WSACleanup();
 
         //printf("the length of page is %d\n", len);
+
+        //return "";    
+
+}
+
+
+int main()
+{
+    cout << "Hello World!\n";
+
+    // const string url = "www.mountainproject.com";
+    // string htmlText = Url::getHtmlText("www.mountainproject.com");
+
+    WSADATA wsaData;
+    SOCKET Socket;
+    SOCKADDR_IN SockAddr;
+    int lineCount = 0;
+    int rowCount = 0;
+    struct hostent* host;
+    locale local;
+    char buffer[10000];
+    int i = 0;
+    int nDataLength;
+    string website_HTML;
+
+    // website url
+    string url = "en.wikipedia.org";//"www.mountainproject.com";//"www.google.com";
+
+    //HTTP GET
+    string get_http = "GET /wiki/Main_Page HTTP/1.1\r\nHost: " + url + "\r\nConnection: close\r\n\r\n";
+
+
+    if (WSAStartup(MAKEWORD(2, 0), &wsaData) != 0) {
+        cout << "WSAStartup failed.\n";
+        system("pause");
+        //return 1;
+    }
+
+    Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    host = gethostbyname(url.c_str());
+
+    SockAddr.sin_port = htons(80);
+    SockAddr.sin_family = AF_INET;
+    SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
+
+    if (connect(Socket, (SOCKADDR*)(&SockAddr), sizeof(SockAddr)) != 0) {
+        cout << "Could not connect";
+        system("pause");
+        //return 1;
+    }
+
+    // send GET / HTTP
+    send(Socket, get_http.c_str(), strlen(get_http.c_str()), 0);
+
+    // recieve html
+    while ((nDataLength = recv(Socket, buffer, 10000, 0)) > 0) {
+        int i = 0;
+        while (buffer[i] >= 32 || buffer[i] == '\n' || buffer[i] == '\r') {
+
+            website_HTML += buffer[i];
+            i += 1;
+        }
+    }
+
+    closesocket(Socket);
+    WSACleanup();
+
+    // Display HTML source 
+    cout << website_HTML;
+
+    return 0;
 }
 
 
