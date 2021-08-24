@@ -1,8 +1,6 @@
 ﻿// MpCrawlerCpplus.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
 // #include "stdafx.h" 
-// #define CURL_STATICLIB
-
+/*
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -13,8 +11,8 @@
 #include <list>
 #include <unordered_set>
 
-#include<stdio.h>  
-#include<string>  
+#include<stdio.h>
+#include<string>
 #include<iostream>
 
 #include <winsock2.h>
@@ -22,8 +20,11 @@
 #include <regex>
 #include <windows.h>
 #pragma comment(lib, "ws2_32.lib")
+#define CURL_STATICLIB
+#include <curl/curl.h> // include directory not reference directory
 
-#define WSWENS MAKEWORD(2,0)  
+
+#define WSWENS MAKEWORD(2,0)
 
 using namespace std;
 
@@ -53,32 +54,34 @@ public:
     }
 };
 
+*/
 
-//static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
-//{
-//    ((string*)userp)->append((char*)contents, size * nmemb);
-//    return size * nmemb;
-//}
-//
-//static string GetHtmlText(const char* url) {
-//    CURL* curl;
-//    CURLcode res;
-//    string readBuffer;
-//
-//    curl = curl_easy_init();
-//    if (curl) {
-//        curl_easy_setopt(curl, CURLOPT_URL, url);
-//        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-//        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-//        res = curl_easy_perform(curl);
-//        curl_easy_cleanup(curl);
-//        //cout << readBuffer << endl;
-//    }
-//
-//    return readBuffer;
-//}
+/*
+static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
+{
+    ((string*)userp)->append((char*)contents, size * nmemb);
+    return size * nmemb;
+}
 
+static void GetHtmlText(const char* url) {
+    CURL* curl;
+    CURLcode res;
+    string readBuffer;
 
+    curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+        cout << readBuffer << endl;
+    }
+
+    // return readBuffer;
+}
+
+*/
 
 namespace HtmlFunc {
 
@@ -89,7 +92,7 @@ namespace HtmlFunc {
     /// <param name="htmlText"></param>
     /// <param name="tagName"></param>
     /// <returns></returns>
-    
+
     /// <summary>
     ///           looking for : < tagName > ... </ tagName >
     ///           Handle the condition that within a qualified tag there are more than one nested qualified tags
@@ -115,9 +118,9 @@ namespace HtmlFunc {
             if (!htmlText.substr(i, tagBegin.length()).compare(tagBegin) == 0)
                 continue;
 
-            for (int j = i; j < htmlText.length() - tagEnd.length(); j++){
+            for (int j = i; j < htmlText.length() - tagEnd.length(); j++) {
                 // if tag begin is found, push the index of first character into stack
-                if (htmlText.substr(j, tagBegin.length()).compare(tagBegin) == 0){
+                if (htmlText.substr(j, tagBegin.length()).compare(tagBegin) == 0) {
                     nestedBeginTags.push(j);
                     j += tagBegin.length();
                     continue;
@@ -133,7 +136,7 @@ namespace HtmlFunc {
                     validTagContent.push_back(htmlText.substr(startIndex, sectionLen));
 
                     // exit if all tag ends are found
-                    if (nestedBeginTags.size() == 0){
+                    if (nestedBeginTags.size() == 0) {
                         // if config == 1, find the first qualified tag section,
                         // which is the last one in the list
                         if (config == true)
@@ -163,11 +166,11 @@ namespace HtmlFunc {
         list<string> filterResult;
 
         list<string>::iterator strIter;
-        for (strIter = tagContentList.begin(); strIter != tagContentList.end(); strIter++){
+        for (strIter = tagContentList.begin(); strIter != tagContentList.end(); strIter++) {
             string currStr = *strIter;
             int searchLen = currStr.find('>') + 1;
 
-            if (currStr.substr(0, searchLen).find(className)){
+            if (currStr.substr(0, searchLen).find(className)) {
                 filterResult.push_back(currStr);
             }
         }
@@ -183,7 +186,7 @@ namespace HtmlFunc {
     /// <param name="htmlText"></param>
     /// <param name="tagNmae"></param>
     /// <returns></returns>
-    static list<string> HtmlFindAllTags(string htmlText, string tagName){
+    static list<string> HtmlFindAllTags(string htmlText, string tagName) {
         return HtmlFunc::SearchByTagName(htmlText, tagName, false);
     }
 
@@ -200,7 +203,7 @@ namespace HtmlFunc {
     ///         If it is not a nested list, it shall only include one element
     /// </returns>
     static string HtmlFindFirstTag(string htmlText, string tagName) {
-       
+
         return HtmlFunc::SearchByTagName(htmlText, tagName, true).back();
     }
 
@@ -214,12 +217,12 @@ namespace HtmlFunc {
     /// </summary>
     /// <param name="routeHtmlText"></param>
     /// <returns></returns>
-    static list<string> HtmlFindAllTags(string htmlText, string tagName, string className){
+    static list<string> HtmlFindAllTags(string htmlText, string tagName, string className) {
 
         return HtmlFunc::FilterByClassName(HtmlFunc::SearchByTagName(htmlText, tagName, false), className);
     }
 
-    
+
     /// <summary>
     ///            this function is to search the first tag with tagName. Also, it shall include typeName 
     ///            find2 : <tagName class="..."> ... </tagName>, <tagName href="..."> ... </tagName>
@@ -335,7 +338,7 @@ namespace GetRouteInfo {
     /// </summary>
     /// <param name="routeHtmlText"></param>
     /// <returns></returns>
-    
+
     static string GetRouteLocation(string routeHtmlText) {
         stringstream locationStr;
         string locationSection = HtmlFunc::HtmlFindAllTags(routeHtmlText, "div", "class=\"mb-half small text-warm\"").front();
@@ -343,7 +346,7 @@ namespace GetRouteInfo {
         int index = 0;
 
         list<string>::iterator aTag;
-        for(aTag = aTagList.begin(); aTag != aTagList.end(); aTag++)
+        for (aTag = aTagList.begin(); aTag != aTagList.end(); aTag++)
         {
             index += 1;
 
@@ -393,7 +396,7 @@ static list<string> GenSearchUrlList(string locationCode) {
     list<string> urlList;
     list<string> ::iterator gradeIter = gradeList.begin();
     list<string> ::iterator gradeIterLast = gradeList.begin();
-    
+
     for (++gradeIter; gradeIter != gradeList.end(); gradeIter++)
     {
         // generate search url based on grade and location
@@ -402,9 +405,9 @@ static list<string> GenSearchUrlList(string locationCode) {
         string searchUrl = "https://www.mountainproject.com/route-finder?selectedIds=" +
             locationCode +
             "&type=boulder&diffMinrock=1800&diffMinboulder=" +
-            *(gradeIterLast) +
+            *(gradeIterLast)+
             "&diffMinaid=70000&diffMinice=30000&diffMinmixed=50000&diffMaxrock=5500&diffMaxboulder=" +
-            *(gradeIter) +
+            *(gradeIter)+
             "&diffMaxaid=75260&diffMaxice=38500&diffMaxmixed=60000&is_trad_climb=1&is_sport_climb=1&is_top_rope=1&stars=0&pitches=0&sort1=popularity+desc&sort2=rating&viewAll=1";
 
         urlList.push_back(searchUrl);
@@ -445,7 +448,7 @@ static void CrawlePerGrade(string url, list<RouteInfo> routeInfoList, unordered_
 
     /// ERROR A:          
     if (htmlText.find("All Locations") != string::npos)
-    {       
+    {
         string errMessage = "Incorrect Location Code!";
         throw std::logic_error(errMessage); // ******************************************************************************
     }
@@ -483,9 +486,9 @@ static void CrawlePerGrade(string url, list<RouteInfo> routeInfoList, unordered_
 
             // Collect route information from each route page
             RouteInfo routeInfo = RouteInfo(GetRouteInfo::GetRouteName(route),
-                                            GetRouteInfo::GetRouteGrade(route),
-                                            GetRouteInfo::GetRouteLocation(route),
-                                            routeLink);
+                GetRouteInfo::GetRouteGrade(route),
+                GetRouteInfo::GetRouteLocation(route),
+                routeLink);
             routeInfoList.push_back(routeInfo);
             routeLinkSet.insert(routeLink);
             // Console.WriteLine("processing route : " + routeName + " ...");
@@ -505,7 +508,7 @@ static list<RouteInfo> MpBoulderRouteCrawler(string locationCode) {
     int index = 0;
 
     unordered_set<string> ::iterator url;
-    
+
     for (url = urlList.begin(); url != urlList.end(); url++)
     {
         // call crawling function for each search url
@@ -519,124 +522,136 @@ static list<RouteInfo> MpBoulderRouteCrawler(string locationCode) {
 
 
 namespace Url {
-    //static string getHtmlText(string url){
+    static void getHtmlText(string url) {
         // Init Winsock
-        //WSADATA wsadata;
-        //if (WSAStartup(WSWENS, &wsadata) != 0)
-        //    cout << "startup failed" << endl;
+        WSADATA wsadata;
+        if (WSAStartup(WSWENS, &wsadata) != 0)
+            cout << "startup failed" << endl;
 
-        //// Create socket
-        //SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
-        //if (s < 0) {
-        //    ExitProcess(EXIT_FAILURE);
-        //}
+        // Create socket
+        SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
+        if (s < 0) {
+            ExitProcess(EXIT_FAILURE);
+        }
 
-        // sin.sin_addr.S_un.S_addr=inet_addr("203.208.37.99");
-        //hostent* hptr = gethostbyname("www.google.com");
-        // 
-        // 
-        // 
-        // 
-        // hostent* hptr = gethostbyname(url.c_str());
-        // hostent* hptr = gethostbyname("en.wikipedia.org");
+        //sin.sin_addr.S_un.S_addr=inet_addr("203.208.37.99");
+        hostent* hptr = gethostbyname("www.google.com");
+
+
+        //hostent* hptr = gethostbyname(url.c_str());
+        //hostent* hptr = gethostbyname("en.wikipedia.org");
 
 
         // Get host name
-        //hostent* hptr = gethostbyname("www.mountainproject.com");// https://en.wikipedia.org/wiki/Main_Page
-        //if (hptr == nullptr) {
-        //    ExitProcess(EXIT_FAILURE);
-        //}
+        //hostent* hptr = gethostbyname("www.mountainproject.com");
+        if (hptr == nullptr) {
+            ExitProcess(EXIT_FAILURE);
+        }
 
         // Defien server info
-        //sockaddr_in sin;
-        //memset(&sin, 0, sizeof(sin));
-        //sin.sin_port = htons(80);
-        //sin.sin_family = AF_INET;
+        sockaddr_in sin;
+        memset(&sin, 0, sizeof(sin));
+        sin.sin_port = htons(80);
+        sin.sin_family = AF_INET;
 
-        //memcpy(&sin.sin_addr.S_un.S_addr, hptr->h_addr, hptr->h_length);
+        memcpy(&sin.sin_addr.S_un.S_addr, hptr->h_addr, hptr->h_length);
 
-        //printf("IP address:%d.%d.%d.%d\n",
-        //    sin.sin_addr.S_un.S_un_b.s_b1,
-        //    sin.sin_addr.S_un.S_un_b.s_b2,
-        //    sin.sin_addr.S_un.S_un_b.s_b3,
-        //    sin.sin_addr.S_un.S_un_b.s_b4);
 
-        //// sockaddr_in transfer to sockaddr
 
-        //if (connect(s, (sockaddr*)&sin, sizeof(sin))) {
-        //    cout << "connect failed" << endl;
-        //    ExitProcess(EXIT_FAILURE);
-        //}
-        //else {
-        //    cout << "connect success" << endl;
-        //}
+        printf("IP address:%d.%d.%d.%d\n",
+            sin.sin_addr.S_un.S_un_b.s_b1,
+            sin.sin_addr.S_un.S_un_b.s_b2,
+            sin.sin_addr.S_un.S_un_b.s_b3,
+            sin.sin_addr.S_un.S_un_b.s_b4);
 
-        //char buffersend[] = "GET/HTTP1.1\nHOST:www.google.cn\nconnection:close\n\n";
+        // sockaddr_in transfer to sockaddr
 
+        if (connect(s, (sockaddr*)&sin, sizeof(sin))) {
+            cout << "connect failed" << endl;
+            ExitProcess(EXIT_FAILURE);
+        }
+        else {
+            cout << "connect success" << endl;
+        }
+
+        //char buffersend[] = "GET/HTTP1.0\nHOST:www.google.cn\nconnection:close\n\n";
         //send(s, buffersend, strlen(buffersend), 0);
 
-        /*string ss;
+        //int len = recv(s,const_cast(ss.c_str()),2000,0);
+        /*char bufferecv[10240];
+        int len = recv(s, bufferecv, 10240, 0);
+        cout << bufferecv << endl;*/
 
-        int len = recv(s,const_cast(ss.c_str()),2000,0);*/
 
-        //char bufferecv[10240];
 
-        //int len = recv(s, bufferecv, 10240, 0);
 
-        //cout << bufferecv << endl;
+        //dynamic allocate size
+        // 
+        // 
+        //char buffersend[] = "GET / HTTP/1.0\r\nHost:www.mountainproject.com\r\nConnection: close\r\n\r\n";
+
+        //int sendResult = send(s, buffersend, strlen(buffersend), 0);
+
+        //printf("the length of request is %d\n", sendResult);
+
+
+
 
         // Do-while loop to send and receive data
-        //char buf[10240];
-        // char buffersend[] = "GET / HTTP/1.1\r\nHost:www.google.com\r\nConnection: close\r\n\r\n";
-        // 
-        //dynamic allocate size
-        //const string begin = "GET /route-guide HTTP/1.1\r\nHost:";
-        //const string end = "\r\nConnection: close\r\n\r\n";
-        //string command = begin + url + end;
-        //char buffersend[command.length()] = command.c_str();
-        // 
-        // 
-        //char buffersend[] =  "GET /route-guide HTTP/1.1\r\nHost:www.mountainproject.com\r\nConnection: close\r\n\r\n";
+        char buf[10240];
+        char buffersend[] = "GET / HTTP/1.1\r\nHost:www.google.com\r\nConnection: close\r\n\r\n";
+        // char buffersend[] = "HEAD / HTTP/1.0\r\n\r\n";
 
 
-        //do
-        //{
-        //    // Prompt the user for some text
+        string ss;
+        // send GET / HTTP
+        //                                    send(s, buffersend, 10240, 0);
 
-        //    // Send the text
-        //    int sendResult = send(s, buffersend, strlen(buffersend), 0);
-        //    if (sendResult != SOCKET_ERROR)
-        //    {
-        //        // Wait for response
-        //        ZeroMemory(buf, 10240);
-        //        int bytesReceived = recv(s, buf, 10240, 0);
-        //        if (bytesReceived > 0)
-        //        {
-        //            // Echo response to console
-        //            cout << "SERVER> " << string(buf, 0, bytesReceived) << endl;
-        //        }
-        //    }
+        // recieve html
+        while ((recv(s, buf, 10240, 0)) > 0) {
+            int i = 0;
+            while (buf[i] >= 32 || buf[i] == '\n' || buf[i] == '\r') {
 
-        //} while (strlen(buffersend) > 0);
+                ss += buf[i];
+                i += 1;
+            }
+        }
 
+        cout << ss;
         // close down everything
-        //closesocket(s);
-        // WSACleanup();
-
-        //printf("the length of page is %d\n", len);
+        closesocket(s);
+        WSACleanup();
 
         //return "";    
-
+    }
 }
 
-
+/*
 int main()
 {
     cout << "Hello World!\n";
 
-    // const string url = "www.mountainproject.com";
-    // string htmlText = Url::getHtmlText("www.mountainproject.com");
+    //const string url = "www.mountainproject.com";
+    //const char* url = "www.mountainproject.com";
+    //Url::getHtmlText("www.mountainproject.com");
+    //GetHtmlText("www.mountainproject.com");
 
+    static std::string readBuffer;
+    CURL* curl;
+    CURLcode res;
+    string readBuffer;
+
+    curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "www.mountainproject.com");
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+        cout << readBuffer << endl;
+    }
+
+    /*
     WSADATA wsaData;
     SOCKET Socket;
     SOCKADDR_IN SockAddr;
@@ -650,12 +665,14 @@ int main()
     string website_HTML;
 
     // website url
-    string url = "en.wikipedia.org";//"www.mountainproject.com";//"www.google.com";
+    string url = "www.mountainproject.com";//"www.stackoverflow.com";;// "www.mountainproject.com";//"www.google.com";"en.wikipedia.org";
 
     //HTTP GET
-    string get_http = "GET /wiki/Main_Page HTTP/1.1\r\nHost: " + url + "\r\nConnection: close\r\n\r\n";
+    // string get_http = "GET /route-finder?type=boulder&amp;diffMinrock=1800&amp;diffMinboulder=20000&amp;diffMinaid=70000&amp;diffMinice=30000&amp;diffMinmixed=50000&amp;diffMaxrock=2800&amp;diffMaxboulder=20050&amp;diffMaxaid=75260&amp;diffMaxice=38500&amp;diffMaxmixed=60000&amp;is_trad_climb=1&amp;is_sport_climb=1&amp;is_top_rope=1&amp;stars=2.8&amp;pitches=0&amp;selectedIds=0 HTTP/1.1\r\nHost: " + url + "\r\nConnection: close\r\n\r\n";
 
+    //string get_http = "GET / HTTP/1.1\r\nHost: " + url + "\r\nConnection: close\r\n\r\n";
 
+    string get_http = "HEAD / HTTP/1.0\r\n\r\n";
     if (WSAStartup(MAKEWORD(2, 0), &wsaData) != 0) {
         cout << "WSAStartup failed.\n";
         system("pause");
@@ -691,13 +708,44 @@ int main()
     closesocket(Socket);
     WSACleanup();
 
-    // Display HTML source 
+    // Display HTML source
     cout << website_HTML;
 
     return 0;
 }
 
+*/
 
+
+#include <iostream>
+#include <string>
+#include <curl/curl.h>
+
+
+static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
+{
+    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    return size * nmemb;
+}
+
+int main(void)
+{
+    CURL* curl;
+    CURLcode res;
+    std::string readBuffer;
+
+    curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "http://www.google.com");
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+
+        std::cout << readBuffer << std::endl;
+    }
+    return 0;
+}
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu
 
