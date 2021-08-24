@@ -36,13 +36,13 @@
     <ClCompile Include="Common\Utilities.cpp">
       <Filter>Source Files\Lib</Filter>
     </ClCompile>
-    <ClCompile Include="ActiveSock.cpp">
+    <ClCompile Include="Client\ActiveSock.cpp">
       <Filter>Source Files\Client</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
+    <ClCompile Include="Client\pch.cpp">
       <Filter>Source Files\Client</Filter>
     </ClCompile>
-    <ClCompile Include="SSLClient.cpp">
+    <ClCompile Include="Client\SSLClient.cpp">
       <Filter>Source Files\Client</Filter>
     </ClCompile>
   </ItemGroup>

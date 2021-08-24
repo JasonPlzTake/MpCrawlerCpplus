@@ -139,14 +139,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ActiveSock.cpp" />
+    <ClCompile Include="Client\ActiveSock.cpp" />
+    <ClCompile Include="Client\pch.cpp" />
+    <ClCompile Include="Client\SSLClient.cpp" />
     <ClCompile Include="Common\BaseSock.cpp" />
     <ClCompile Include="Common\CertHelper.cpp" />
     <ClCompile Include="Common\CertRAII.cpp" />
     <ClCompile Include="Common\Utilities.cpp" />
-    <ClCompile Include="pch.cpp" />
     <ClCompile Include="SecureSocket.cpp" />
-    <ClCompile Include="SSLClient.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\header\AppVersion.h" />
